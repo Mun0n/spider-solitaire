@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="undo">Deshacer</string>
+    <string name="hint">Pista</string>
+    <string name="new_game">Nueva partida</string>
+    <string name="new_game_short">Nueva</string>
+    <string name="points">puntos</string>
+    <string name="one_suit">1 palo</string>
+    <string name="two_suits">2 palos</string>
+    <string name="four_suits">4 palos</string>
+    <string name="one_suit_help">Un solo palo. La más tranquila.</string>
+    <string name="two_suits_help">Picas y corazones.</string>
+    <string name="four_suits_help">Los cuatro palos. La de verdad.</string>
+    <string name="you_won">Has ganado</string>
+    <string name="new_record">Nuevo récord</string>
+    <string name="record">Récord %1$d</string>
+    <string name="empty_column_block">Rellena las columnas vacías para repartir</string>
+    <string name="no_cards">No quedan cartas</string>
+    <string name="no_moves">No hay movimientos</string>
+    <string name="illegal_move">Esa carta no va ahí</string>
+    <string name="stock">Mazo</string>
+    <string name="choose_game">Elige la partida</string>
+    <string name="keep_playing">Seguir jugando</string>
+    <string name="deals_left">%1$d</string>
+    <string name="suits_done">%1$d/8</string>
+</resources>

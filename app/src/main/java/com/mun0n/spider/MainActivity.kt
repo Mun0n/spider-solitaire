@@ -7,18 +7,17 @@ import androidx.activity.enableEdgeToEdge
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import com.mun0n.spider.ui.SpiderTheme
-import com.mun0n.spider.ui.TableScreen
+import com.mun0n.spider.data.DirSaveFiles
+import com.mun0n.spider.ui.SpiderApp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         hideSystemBars()
+        val files = DirSaveFiles(filesDir)
         setContent {
-            SpiderTheme {
-                TableScreen()
-            }
+            SpiderApp(files)
         }
     }
 

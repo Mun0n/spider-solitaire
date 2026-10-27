@@ -28,10 +28,8 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -39,10 +37,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
-import com.mun0n.spider.R
 import com.mun0n.spider.game.Card
 import com.mun0n.spider.game.Rank
 import com.mun0n.spider.game.Suit
+import com.mun0n.spider.resources.Res
+import com.mun0n.spider.resources.court_jack_black
+import com.mun0n.spider.resources.court_jack_red
+import com.mun0n.spider.resources.court_king_black
+import com.mun0n.spider.resources.court_king_red
+import com.mun0n.spider.resources.court_queen_black
+import com.mun0n.spider.resources.court_queen_red
+import org.jetbrains.compose.resources.painterResource
 
 private val CardFaceColor = Color.White
 private val CardEdge = Color(0xFFB9B9B9)
@@ -55,8 +60,6 @@ private val PipBlack = Color(0xFF161616)
 val HintGold = Color(0xFFFFD56A)
 val SelectGold = Color(0xFFF2C14E)
 val CardCorner = 6.dp
-
-private val Tight = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
 
 private val PipPositions: Map<Int, List<Pair<Float, Float>>> = mapOf(
     2 to listOf(0.50f to 0.30f, 0.50f to 0.70f),
@@ -151,7 +154,7 @@ private fun CardFace(card: Card) {
         val ten = card.rank == Rank.TEN
         val rankDp = maxWidth * if (ten) 0.175f else 0.24f
         val mark = maxWidth * 0.16f
-        val rankStyle = Tight.copy(
+        val rankStyle = TextStyle(
             color = color,
             fontFamily = FontFamily.Serif,
             fontWeight = FontWeight.Black,
@@ -218,9 +221,9 @@ private fun Index(
 @Composable
 private fun CourtArt(card: Card, modifier: Modifier) {
     val id = when (card.rank) {
-        Rank.KING -> if (card.suit.red) R.drawable.court_king_red else R.drawable.court_king_black
-        Rank.QUEEN -> if (card.suit.red) R.drawable.court_queen_red else R.drawable.court_queen_black
-        else -> if (card.suit.red) R.drawable.court_jack_red else R.drawable.court_jack_black
+        Rank.KING -> if (card.suit.red) Res.drawable.court_king_red else Res.drawable.court_king_black
+        Rank.QUEEN -> if (card.suit.red) Res.drawable.court_queen_red else Res.drawable.court_queen_black
+        else -> if (card.suit.red) Res.drawable.court_jack_red else Res.drawable.court_jack_black
     }
     Image(
         painter = painterResource(id),

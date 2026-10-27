@@ -16,4 +16,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Spider"
 include(":game")
+include(":shared")
 include(":app")

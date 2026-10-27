@@ -1,10 +1,7 @@
 package com.mun0n.spider.ui
 
-import android.app.Application
-import androidx.annotation.StringRes
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mun0n.spider.R
 import com.mun0n.spider.data.GameRepository
 import com.mun0n.spider.game.DealBlock
 import com.mun0n.spider.game.Difficulty
@@ -16,7 +13,13 @@ import com.mun0n.spider.game.RemovedRun
 import com.mun0n.spider.game.SaveData
 import com.mun0n.spider.game.Slide
 import com.mun0n.spider.game.SpiderRules
+import com.mun0n.spider.resources.Res
+import com.mun0n.spider.resources.empty_column_block
+import com.mun0n.spider.resources.illegal_move
+import com.mun0n.spider.resources.no_cards
+import com.mun0n.spider.resources.no_moves
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import org.jetbrains.compose.resources.StringResource
 
 data class Visual(
     val id: Long,
@@ -48,15 +52,14 @@ data class UiState(
     val hintPlays: List<Hint.MoveCards> = emptyList(),
     val hintSerial: Int = 0,
     val dialog: Dialog? = null,
-    val banner: String? = null,
+    val banner: StringResource? = null,
     val visual: Visual? = null,
     val inputLocked: Boolean = false,
     val lastDifficulty: Difficulty = Difficulty.ONE,
     val records: Records = Records(),
 )
 
-class GameViewModel(app: Application) : AndroidViewModel(app) {
-    private val repo = GameRepository(app)
+class GameViewModel(private val repo: GameRepository) : ViewModel() {
     private val _ui = MutableStateFlow(UiState())
     val ui: StateFlow<UiState> = _ui.asStateFlow()
 
@@ -99,11 +102,11 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
         val current = session ?: return
         when (SpiderRules.dealBlock(current.state)) {
             DealBlock.EmptyColumn -> {
-                banner(R.string.empty_column_block)
+                banner(Res.string.empty_column_block)
                 return
             }
             DealBlock.NoCards -> {
-                banner(R.string.no_cards)
+                banner(Res.string.no_cards)
                 return
             }
             null -> Unit
@@ -140,7 +143,7 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
         val tour = SpiderRules.hintTour(current.state)
         if (tour.isEmpty()) {
             dismissHint()
-            banner(R.string.no_moves)
+            banner(Res.string.no_moves)
             return
         }
         showHint(tour.first(), tour.filterIsInstance<Hint.MoveCards>())
@@ -153,7 +156,7 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
 
     fun onIllegalMove() {
         if (_ui.value.inputLocked) return
-        banner(R.string.illegal_move)
+        banner(Res.string.illegal_move)
     }
 
     fun onRequestNewGame() {
@@ -232,7 +235,7 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
         val source = current.state.columns.getOrNull(fromCol) ?: return false
         if (fromIndex !in source.indices) return false
         if (!SpiderRules.canMove(current.state, fromCol, fromIndex, toCol)) {
-            if (fromUser) banner(R.string.illegal_move)
+            if (fromUser) banner(Res.string.illegal_move)
             return false
         }
         if (fromUser) {
@@ -282,8 +285,7 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private fun banner(@StringRes id: Int) {
-        val text = getApplication<Application>().getString(id)
+    private fun banner(text: StringResource) {
         val myTicket = ++bannerTicket
         _ui.value = _ui.value.copy(banner = text)
         viewModelScope.launch {
@@ -300,7 +302,7 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
         dialog: Dialog? = _ui.value.dialog,
         hint: Hint? = null,
         hintPlays: List<Hint.MoveCards> = emptyList(),
-        banner: String? = _ui.value.banner,
+        banner: StringResource? = _ui.value.banner,
         lastDifficulty: Difficulty = session?.state?.difficulty ?: _ui.value.lastDifficulty,
         records: Records = _ui.value.records,
     ) {

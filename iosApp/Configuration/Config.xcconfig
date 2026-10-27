@@ -1,0 +1,5 @@
+// Tu Team ID de Apple (Xcode > Settings > Accounts). Con un Apple ID gratuito también vale.
+TEAM_ID=
+
+BUNDLE_ID=com.mun0n.spider
+APP_NAME=Spider Solitaire

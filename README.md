@@ -1,6 +1,6 @@
 # Spider Solitaire
 
-Spider Solitaire for Android tablets. Landscape, no ads, no purchases, no network.
+Spider Solitaire for Android tablets, iPad and iPhone. Landscape, no ads, no purchases, no network.
 
 ![Game](docs/table.gif)
 
@@ -27,32 +27,45 @@ An ace is not dragged onto a pile. It closes a same-suit run from king to ace, a
 ## Project
 
 ```
-game/   rules, save format, and tests. Plain Kotlin, no Android
-app/    Jetpack Compose table, on-disk game, icon
+game/     rules, save format, and tests. Kotlin Multiplatform, no Android
+shared/   Compose Multiplatform table, on-disk game. Android and iOS
+app/      Android activity, icon
+iosApp/   Xcode project: SwiftUI entry point, icon
 ```
 
 | | |
 | --- | --- |
-| Language | Kotlin 2.0, Java 17 |
-| UI | Jetpack Compose. Cards are drawn on a `Canvas`, not bitmaps |
-| Minimum | Android 8 (API 26), compiled with SDK 35 |
+| Language | Kotlin 2.4, Java 17 |
+| UI | Compose Multiplatform 1.8. Cards are drawn on a `Canvas`, not bitmaps |
+| Minimum | Android 8 (API 26), compiled with SDK 35. iOS 16 |
 | Package | `com.mun0n.spider` |
-| Tests | JUnit, in `:game` |
+| Tests | JUnit, in `:game` (`jvmTest`) |
 
 Animations commit the move before showing it. An `Animatable` from 0 to 1 interpolates copies of the cards above the felt: the deal, a slide, and a completed suit leaving. A drag follows the finger; if the drop is illegal, the cards go back.
 
-The game is stored in `filesDir/spider_save.txt`. The format is text (`SaveCodec`): the current game and the undo history.
+The game is stored in `filesDir/spider_save.txt` on Android and in `Application Support/spider_save.txt` on iOS. The format is text (`SaveCodec`): the current game and the undo history.
 
 ## Build
 
 JDK 17 and Android SDK 35. `local.properties` with `sdk.dir` is not in the repo; Android Studio creates it when you open the project.
 
 ```bash
-./gradlew :game:test
+./gradlew :game:jvmTest
 ./gradlew :app:assembleDebug
 ```
 
 The APK is at `app/build/outputs/apk/debug/`.
+
+### iOS
+
+Xcode, JDK 17 and the Android SDK (Gradle configures `:shared` for both platforms, so `local.properties` is needed here too).
+
+1. Put your Team ID in `iosApp/Configuration/Config.xcconfig`. A free Apple ID works for your own device; the app then expires after 7 days.
+2. Open `iosApp/iosApp.xcodeproj` and run. The first build phase calls `./gradlew :shared:embedAndSignAppleFrameworkForXcode`.
+
+Xcode does not see the terminal's `JAVA_HOME`. If Android Studio is installed, the build phase uses its JDK.
+
+On iPhone the ten columns are narrow. It plays, but the table was designed for a tablet.
 
 ## Release
 

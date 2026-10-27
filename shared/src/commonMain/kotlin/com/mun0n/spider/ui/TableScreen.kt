@@ -1,6 +1,5 @@
 package com.mun0n.spider.ui
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
@@ -23,10 +22,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -52,9 +49,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -64,10 +58,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import android.os.Build
-import android.view.HapticFeedbackConstants
-import com.mun0n.spider.R
 import kotlinx.coroutines.delay
 import com.mun0n.spider.game.Card
 import com.mun0n.spider.game.Difficulty
@@ -77,8 +67,27 @@ import com.mun0n.spider.game.Hint
 import com.mun0n.spider.game.Rank
 import com.mun0n.spider.game.Suit
 import com.mun0n.spider.game.SpiderRules
+import com.mun0n.spider.resources.Res
+import com.mun0n.spider.resources.choose_game
+import com.mun0n.spider.resources.hint
+import com.mun0n.spider.resources.ic_menu_hint
+import com.mun0n.spider.resources.ic_menu_new
+import com.mun0n.spider.resources.ic_menu_undo
+import com.mun0n.spider.resources.keep_playing
+import com.mun0n.spider.resources.new_game
+import com.mun0n.spider.resources.new_game_short
+import com.mun0n.spider.resources.new_record
+import com.mun0n.spider.resources.points
+import com.mun0n.spider.resources.record
+import com.mun0n.spider.resources.suits_done
+import com.mun0n.spider.resources.undo
+import com.mun0n.spider.resources.you_won
+import kotlin.math.PI
 import kotlin.math.roundToInt
 import kotlin.math.sin
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 private val FeltBrush = Brush.radialGradient(
     colors = listOf(Color(0xFF1B7D45), Color(0xFF0E6234), Color(0xFF084426)),
@@ -148,21 +157,21 @@ private data class TableGeom(
 }
 
 @Composable
-fun TableScreen(vm: GameViewModel = viewModel()) {
+fun TableScreen(vm: GameViewModel) {
     val state by vm.ui.collectAsStateWithLifecycle()
-    BackHandler(
+    SystemBackHandler(
         enabled = state.dialog is Dialog.NewGame && state.game != null && state.game?.won != true,
     ) {
         vm.onDismissDialog()
     }
     Box(Modifier.fillMaxSize().background(FeltBrush)) {
-        Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.displayCutout)) {
+        Box(Modifier.fillMaxSize().windowInsetsPadding(tableInsets())) {
             val game = state.game
             if (game != null) Board(game, state, vm)
         }
         state.banner?.let { message ->
             Text(
-                message,
+                stringResource(message),
                 color = Color.White,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
@@ -213,7 +222,7 @@ private fun BoxScope.TableChrome(
             fontWeight = FontWeight.Bold,
             modifier = Modifier.semantics { contentDescription = "puntos" },
         )
-        Text(stringResource(R.string.points), color = Color.White.copy(alpha = 0.75f), fontSize = 14.sp)
+        Text(stringResource(Res.string.points), color = Color.White.copy(alpha = 0.75f), fontSize = 14.sp)
         state.game?.let { game ->
             Text(
                 difficultyLabel(game.difficulty),
@@ -224,7 +233,7 @@ private fun BoxScope.TableChrome(
     }
     val density = LocalDensity.current
     Text(
-        text = stringResource(R.string.suits_done, finished),
+        text = stringResource(Res.string.suits_done, finished),
         color = Color.White,
         fontSize = 18.sp,
         fontWeight = FontWeight.Bold,
@@ -247,20 +256,20 @@ private fun BoxScope.TableChrome(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         MenuAction(
-            icon = R.drawable.ic_menu_new,
-            label = stringResource(R.string.new_game_short),
+            icon = Res.drawable.ic_menu_new,
+            label = stringResource(Res.string.new_game_short),
             enabled = !state.inputLocked && !state.loading,
             onClick = vm::onRequestNewGame,
         )
         MenuAction(
-            icon = R.drawable.ic_menu_hint,
-            label = stringResource(R.string.hint),
+            icon = Res.drawable.ic_menu_hint,
+            label = stringResource(Res.string.hint),
             enabled = state.game != null && !state.inputLocked,
             onClick = vm::onHint,
         )
         MenuAction(
-            icon = R.drawable.ic_menu_undo,
-            label = stringResource(R.string.undo),
+            icon = Res.drawable.ic_menu_undo,
+            label = stringResource(Res.string.undo),
             enabled = state.canUndo && !state.inputLocked,
             onClick = vm::onUndo,
         )
@@ -269,7 +278,7 @@ private fun BoxScope.TableChrome(
 
 @Composable
 private fun MenuAction(
-    icon: Int,
+    icon: DrawableResource,
     label: String,
     enabled: Boolean,
     onClick: () -> Unit,
@@ -334,15 +343,10 @@ private fun Board(game: GameState, state: UiState, vm: GameViewModel) {
     var shake by remember { mutableStateOf<Shake?>(null) }
     var shakeSerial by remember { mutableIntStateOf(0) }
     val shakeAnim = remember { Animatable(0f) }
-    val view = LocalView.current
+    val rejectFeedback = rememberRejectFeedback()
     LaunchedEffect(shake?.token) {
         val current = shake ?: return@LaunchedEffect
-        val feedback = if (Build.VERSION.SDK_INT >= 30) {
-            HapticFeedbackConstants.REJECT
-        } else {
-            HapticFeedbackConstants.LONG_PRESS
-        }
-        view.performHapticFeedback(feedback)
+        rejectFeedback()
         shakeAnim.snapTo(0f)
         shakeAnim.animateTo(1f, tween(420, easing = LinearEasing))
         if (shake?.token == current.token) shake = null
@@ -376,7 +380,9 @@ private fun Board(game: GameState, state: UiState, vm: GameViewModel) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val density = LocalDensity.current
         val geom = remember(constraints.maxWidth, constraints.maxHeight, density.density) {
-            measureTable(constraints.maxWidth.toFloat(), constraints.maxHeight.toFloat())
+            // En pantallas de 3x (iPhone) 60 px no dejan sitio a la puntuación.
+            val header = maxOf(60f, with(density) { 40.dp.toPx() })
+            measureTable(constraints.maxWidth.toFloat(), constraints.maxHeight.toFloat(), header)
         }
         val cardW = with(density) { geom.cardW.toDp() }
         val cardH = with(density) { geom.cardH.toDp() }
@@ -419,7 +425,7 @@ private fun Board(game: GameState, state: UiState, vm: GameViewModel) {
             0f
         } else {
             val t = shakeAnim.value
-            sin(t * Math.PI * 6).toFloat() * (1f - t) * 16f
+            sin(t * PI * 6).toFloat() * (1f - t) * 16f
         }
 
         columns.forEachIndexed { col, cards ->
@@ -527,7 +533,7 @@ private fun Board(game: GameState, state: UiState, vm: GameViewModel) {
         }
         demo?.let { ride ->
             val t = smooth(ride.progress)
-            val lift = sin(t * Math.PI).toFloat() * geom.cardH * 0.05f
+            val lift = sin(t * PI).toFloat() * geom.cardH * 0.05f
             ride.cards.forEachIndexed { index, card ->
                 val (start, end) = ride.spots[index]
                 PlayingCard(
@@ -765,7 +771,7 @@ private fun completeFlight(
     val which = sameColumn.indexOf(run).coerceAtLeast(0)
     val startIndex = runStart(column.size, sameColumn, which)
     val t = smooth(progress)
-    val lift = sin(t * Math.PI).toFloat() * geom.cardH * 0.18f
+    val lift = sin(t * PI).toFloat() * geom.cardH * 0.18f
     val already = (finishedCount - visual.removed.size).coerceAtLeast(0)
     val slot = already + visual.removed.take(runIndex).size
     val count = finishedCount.coerceAtLeast(slot + 1)
@@ -942,7 +948,7 @@ private fun NewGameDialog(
 ) {
     Scrim(onDismiss = if (canDismiss) onDismiss else null) {
         Text(
-            stringResource(R.string.choose_game),
+            stringResource(Res.string.choose_game),
             color = Ink,
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
@@ -963,7 +969,7 @@ private fun NewGameDialog(
                 Text(difficultyHelp(difficulty), color = Color.White.copy(alpha = 0.85f), fontSize = 16.sp)
                 records.best[difficulty]?.let { best ->
                     Text(
-                        stringResource(R.string.record, best),
+                        stringResource(Res.string.record, best),
                         color = Color.White.copy(alpha = 0.65f),
                         fontSize = 14.sp,
                         modifier = Modifier.padding(top = 2.dp),
@@ -973,7 +979,7 @@ private fun NewGameDialog(
         }
         if (canDismiss) {
             Text(
-                stringResource(R.string.keep_playing),
+                stringResource(Res.string.keep_playing),
                 color = Color(0xFF0E6A38),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -990,7 +996,7 @@ private fun NewGameDialog(
 @Composable
 private fun WonDialog(score: Int, best: Int, isRecord: Boolean, onNewGame: () -> Unit) {
     Scrim(onDismiss = null) {
-        Text(stringResource(R.string.you_won), color = Ink, fontSize = 40.sp, fontWeight = FontWeight.Bold)
+        Text(stringResource(Res.string.you_won), color = Ink, fontSize = 40.sp, fontWeight = FontWeight.Bold)
         Text(
             score.toString(),
             color = Color(0xFF0E6A38),
@@ -998,16 +1004,16 @@ private fun WonDialog(score: Int, best: Int, isRecord: Boolean, onNewGame: () ->
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(top = 4.dp),
         )
-        Text(stringResource(R.string.points), color = Ink.copy(alpha = 0.7f), fontSize = 18.sp)
+        Text(stringResource(Res.string.points), color = Ink.copy(alpha = 0.7f), fontSize = 18.sp)
         Text(
-            if (isRecord) stringResource(R.string.new_record) else stringResource(R.string.record, best),
+            if (isRecord) stringResource(Res.string.new_record) else stringResource(Res.string.record, best),
             color = Color(0xFF0E6A38),
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(top = 8.dp),
         )
         Text(
-            stringResource(R.string.new_game),
+            stringResource(Res.string.new_game),
             color = Color.White,
             fontSize = 22.sp,
             fontWeight = FontWeight.SemiBold,
@@ -1064,10 +1070,9 @@ private fun difficultyHelp(difficulty: Difficulty): String = when (difficulty) {
 
 private const val CARD_RATIO = 1.4f
 
-private fun measureTable(width: Float, height: Float): TableGeom {
+private fun measureTable(width: Float, height: Float, header: Float): TableGeom {
     val edge = 16f
     val gap = 8f
-    val header = 60f
     val rawW = (width - edge * 2 - gap * 9) / 10f
     var cardW = rawW
     var cardH = cardW * CARD_RATIO
